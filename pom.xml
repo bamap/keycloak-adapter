@@ -144,6 +144,13 @@
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <version>${kotlin.version}</version>
                 <extensions>true</extensions>
+                <configuration>
+                    <javaParameters>true</javaParameters>
+                    <args>
+                        <arg>-Xjvm-default=all</arg>
+                    </args>
+                </configuration>
+
             </plugin>
 
             <plugin>
