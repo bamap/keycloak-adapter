@@ -5,7 +5,7 @@
 
     <groupId>ir.bamap.blu.adapter</groupId>
     <artifactId>keycloak-adapter</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 
     <name>Keycloak Adapter</name>
     <description>Blu keycloak adapter</description>
@@ -49,17 +49,20 @@
         <spring-cloud.version>2025.0.0</spring-cloud.version>
 
         <testcontainers-keycloak.version>3.9.0</testcontainers-keycloak.version>
+
+        <exception.version>1.0.3</exception.version>
+        <keycloak-model.version>1.0.0</keycloak-model.version>
     </properties>
     <dependencies>
         <dependency>
             <groupId>ir.bamap.blu</groupId>
             <artifactId>exception</artifactId>
-            <version>1.0.1</version>
+            <version>${exception.version}</version>
         </dependency>
         <dependency>
             <groupId>ir.bamap.blu.adapter</groupId>
             <artifactId>keycloak-model</artifactId>
-            <version>1.0.0</version>
+            <version>${keycloak-model.version}</version>
         </dependency>
         <dependency>
             <groupId>io.github.openfeign</groupId>
