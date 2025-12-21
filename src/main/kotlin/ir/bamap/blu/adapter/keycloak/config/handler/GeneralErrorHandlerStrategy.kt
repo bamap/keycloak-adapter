@@ -1,13 +1,8 @@
 package ir.bamap.blu.adapter.keycloak.config.error.handler
 
-import feign.Response
 import ir.bamap.blu.adapter.keycloak.config.Messages
-import ir.bamap.blu.adapter.keycloak.exception.AccountNotFullySetupException
-import ir.bamap.blu.adapter.keycloak.exception.DuplicateEmailException
-import ir.bamap.blu.adapter.keycloak.exception.DuplicateUsernameException
-import ir.bamap.blu.adapter.keycloak.exception.InvalidClientCredentials
-import ir.bamap.blu.adapter.keycloak.exception.InvalidUserCredentialException
-import ir.bamap.blu.adapter.keycloak.exception.SecurityAdapterException
+import ir.bamap.blu.adapter.keycloak.exception.*
+import org.springframework.web.reactive.function.client.ClientResponse
 
 open class GeneralErrorHandlerStrategy : ErrorHandlerStrategy {
 
@@ -19,7 +14,7 @@ open class GeneralErrorHandlerStrategy : ErrorHandlerStrategy {
         initErrorMessageExceptionMap()
     }
 
-    override fun getExceptionOrNull(errorBody: Map<String, Any?>, response: Response): SecurityAdapterException? {
+    override fun getExceptionOrNull(errorBody: Map<String, Any?>, response: ClientResponse): SecurityAdapterException? {
         val description = errorBody["error_description"] as String?
         val entry = errorDescriptionExceptionMap.get(description)
         if (entry != null) return entry
