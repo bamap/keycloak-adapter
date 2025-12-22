@@ -1,15 +1,24 @@
 package ir.bamap.blu.adapter.keycloak.adapter
 
 import ir.bamap.blu.adapter.keycloak.model.UserRepresentation
-import org.springframework.web.bind.annotation.*
-import java.util.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.service.annotation.DeleteExchange
+import org.springframework.web.service.annotation.GetExchange
+import org.springframework.web.service.annotation.PostExchange
+import org.springframework.web.service.annotation.PutExchange
+import java.util.UUID
 
 interface KeycloakUserAdapter {
-
-    @DeleteMapping("/users/{userId}")
+    @DeleteExchange("/users/{userId}")
     fun delete(@PathVariable(name = "userId") userId: UUID)
 
-    @GetMapping("/users")
+    @GetExchange("/users")
     fun find(
         @RequestParam(required = false, name = "first") first: Int = 0,
         @RequestParam(required = false, name = "max") max: Int = 100,
@@ -23,10 +32,10 @@ interface KeycloakUserAdapter {
         @RequestParam(name = "briefRepresentation") briefRepresentation: Boolean = false
     ): List<UserRepresentation>
 
-    @PostMapping("/users")
+    @PostExchange("/users")
     fun add(@RequestBody user: UserRepresentation)
 
-    @PutMapping("/users/{userId}")
+    @PutExchange("/users/{userId}")
     fun update(@RequestBody user: UserRepresentation, @PathVariable(name = "userId") userId: UUID)
 
     fun findSummaryByUsernameOrNull(username: String?): UserRepresentation? {
@@ -35,7 +44,6 @@ interface KeycloakUserAdapter {
             .firstOrNull()
     }
 
-    @GetMapping("/users/{userId}?userProfileMetadata=true")
+    @GetExchange("/users/{userId}?userProfileMetadata=true")
     fun findById(@PathVariable(name = "userId") userId: UUID): UserRepresentation? //    @LoggablePutMapping("/users/{userId}")
-    //    void edit(UserDetailsModel user, @PathVariable UUID userId);
 }

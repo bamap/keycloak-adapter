@@ -11,7 +11,6 @@ class ClientTokenProvider(
     private val clientSecret: String
 ) : TokenProvider {
 
-
     private var token: OAuthToken? = null
 
     override fun getTokenOrNull(): String {

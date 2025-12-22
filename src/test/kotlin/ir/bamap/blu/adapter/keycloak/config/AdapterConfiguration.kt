@@ -1,57 +1,81 @@
 package ir.bamap.blu.adapter.keycloak.config
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import feign.Client
-import feign.Contract
-import feign.Feign
-import feign.codec.Decoder
-import feign.codec.Encoder
-import feign.form.FormEncoder
 import ir.bamap.blu.adapter.keycloak.adapter.KeycloakUserAdapter
 import ir.bamap.blu.adapter.keycloak.adapter.TokenAdapter
 import ir.bamap.blu.adapter.keycloak.provider.ClientTokenProvider
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.SpringBootConfiguration
-import org.springframework.boot.autoconfigure.http.HttpMessageConverters
-import org.springframework.cloud.openfeign.FeignClientsConfiguration
+import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Import
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
+import org.springframework.web.reactive.function.client.ClientRequest
+import org.springframework.web.reactive.function.client.ClientResponse
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction
+import org.springframework.web.reactive.function.client.ExchangeFunction
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.bodyToMono
+import org.springframework.web.reactive.function.client.support.WebClientAdapter
+import org.springframework.web.service.invoker.HttpServiceProxyFactory
+import org.springframework.web.service.invoker.createClient
+import reactor.core.publisher.Mono
+import tools.jackson.databind.ObjectMapper
 
-@SpringBootConfiguration
-@Import(FeignClientsConfiguration::class)
+
+//@SpringBootConfiguration
+@TestConfiguration(proxyBeanMethods = false)
 open class AdapterConfiguration(
     private val kycInfo: KycInfo
 ) {
 
     @Bean
-    open fun tokenAdapter(
-        builder: Feign.Builder, client: Client, messageConverters: HttpMessageConverters,
-        contract: Contract, encoder: Encoder, decoder: Decoder, errorDecoder: KeycloakErrorDecoder
-    ): TokenAdapter {
-        val end = FormEncoder()
-        return builder.client(client)
-            .contract(contract)
-            .encoder(end)
-            .decoder(decoder)
-            .errorDecoder(errorDecoder)
-            .target(TokenAdapter::class.java, kycInfo.getRealmUrl())
+    fun adapterWebClient(builder: WebClient.Builder): WebClient {
+        return builder
+            .baseUrl(kycInfo.getRealmUrl())
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+//            .defaultHeader("Authorization", "token " + properties.getToken())
+//            .filter(errorHandler())
+//            .filter(connectionErrorHandler())
+//            .filter(rateLimitHandler())
+            .build()
     }
 
     @Bean
-    open fun keycloakUserAdapter(
-        client: Client, contract: Contract, encoder: Encoder, tokenAdapter: TokenAdapter,
-        decoder: Decoder, errorDecoder: KeycloakErrorDecoder
-    ): KeycloakUserAdapter {
-        val tokenProvider = ClientTokenProvider(tokenAdapter, kycInfo.clientId, kycInfo.clientSecret)
-        val interceptor = TokenRequestInterceptor(tokenProvider)
-        return Feign.builder()
-            .client(client)
-            .contract(contract)
-            .encoder(encoder)
-            .decoder(decoder)
-            .errorDecoder(errorDecoder)
-            .requestInterceptor(interceptor)
-            .target(KeycloakUserAdapter::class.java, kycInfo.getAdminRealmUrl())
+    fun tokenAdapter(adapterWebClient: WebClient): TokenAdapter {
+        return HttpServiceProxyFactory.builderFor(WebClientAdapter.create(adapterWebClient))
+            .build()
+            .createClient<TokenAdapter>()
+    }
+
+    @Bean
+    fun userAdapter(builder: WebClient.Builder, clientTokenProvider: ClientTokenProvider): KeycloakUserAdapter {
+        val adapterWebClient = builder
+            .baseUrl(kycInfo.getAdminRealmUrl())
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .filter(oauthFilter(clientTokenProvider))
+//            .defaultHeader("Authorization", "token " + properties.getToken())
+            .filter(errorHandler())
+//            .filter(connectionErrorHandler())
+//            .filter(rateLimitHandler())
+            .build()
+        return HttpServiceProxyFactory.builderFor(WebClientAdapter.create(adapterWebClient))
+            .build()
+            .createClient<KeycloakUserAdapter>()
+    }
+
+    @Bean
+    fun clientTokenProvider(tokenAdapter: TokenAdapter): ClientTokenProvider {
+        return ClientTokenProvider(tokenAdapter, kycInfo.clientId, kycInfo.clientSecret)
+    }
+
+    private fun oauthFilter(tokenProvider: ClientTokenProvider): ExchangeFilterFunction {
+        return ExchangeFilterFunction { request: ClientRequest, next: ExchangeFunction ->
+
+            val token = tokenProvider.getTokenOrNull()
+            val filteredRequest = ClientRequest.from(request)
+                .header("Authorization", token)
+                .build()
+            next.exchange(filteredRequest)
+        }
     }
 
     @Bean
@@ -59,13 +83,17 @@ open class AdapterConfiguration(
         return KeycloakErrorDecoder(ObjectMapper())
     }
 
-    @Bean
-    open fun getClient(): Client {
-        return Client.Default(null, null, false)
-    }
-
-    @Bean
-    open fun messageConverters(): HttpMessageConverters {
-        return HttpMessageConverters()
+    private fun errorHandler(): ExchangeFilterFunction {
+        return ExchangeFilterFunction.ofResponseProcessor { response: ClientResponse ->
+            if (response.statusCode().isError) {
+                println("Error Status Code: ${response.statusCode().value()}")
+                return@ofResponseProcessor response.bodyToMono<String>()
+                    .flatMap { errorBody: String? ->
+                        println("Error: $errorBody")
+                        Mono.error(RuntimeException())
+                    }
+            }
+            Mono.just(response)
+        }
     }
 }

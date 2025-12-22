@@ -1,18 +1,15 @@
 package ir.bamap.blu.adapter.keycloak.config
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
-import feign.Response
-import feign.codec.ErrorDecoder
 import ir.bamap.blu.adapter.keycloak.config.error.handler.AttributeErrorHandlerStrategy
 import ir.bamap.blu.adapter.keycloak.config.error.handler.ByStatusErrorHandlerStrategy
 import ir.bamap.blu.adapter.keycloak.config.error.handler.ErrorHandlerStrategy
 import ir.bamap.blu.adapter.keycloak.config.error.handler.GeneralErrorHandlerStrategy
 import ir.bamap.blu.adapter.keycloak.exception.SecurityAdapterException
-import ir.bamap.blu.adapter.keycloak.util.LogUtil
+import ir.bamap.blu.exception.BluException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.io.IOException
+import org.springframework.web.reactive.function.client.ClientResponse
+import tools.jackson.databind.ObjectMapper
 
 open class KeycloakErrorDecoder(protected val objectMapper: ObjectMapper) : ErrorDecoder {
     protected val logger: Logger = LoggerFactory.getLogger(javaClass)
@@ -22,20 +19,20 @@ open class KeycloakErrorDecoder(protected val objectMapper: ObjectMapper) : Erro
         initStrategies()
     }
 
-    override fun decode(methodKey: String, response: Response): Exception {
-        val body = getResponseBody(response)
-
-        logError(methodKey, response, body)
-
-        for (strategy in strategies) {
-            val exception = strategy.getExceptionOrNull(body, response)
-            if (exception != null) return exception
-        }
+    override fun decode(response: ClientResponse): BluException {
+//        val body = getResponseBody(response)
+//
+//        logError(methodKey, response, body)
+//
+//        for (strategy in strategies) {
+//            val exception = strategy.getExceptionOrNull(body, response)
+//            if (exception != null) return exception
+//        }
 
         return SecurityAdapterException(500, "{blu.keycloak}", mutableMapOf<String, Any?>())
     }
 
-    protected open fun logError(methodKey: String, response: Response, responseBody: Map<String, Any?>) {
+    /*protected open fun logError(methodKey: String, response: Response, responseBody: Map<String, Any?>) {
         val responseArguments = HashMap<String, Any?>()
         responseArguments["body"] = responseBody
         responseArguments["status"] = response.status()
@@ -51,9 +48,9 @@ open class KeycloakErrorDecoder(protected val objectMapper: ObjectMapper) : Erro
         arguments["request"] = requestParams
 
         LogUtil.log(logger.atError(), "Error in keycloak", arguments)
-    }
+    }*/
 
-    protected open fun getResponseBody(response: Response): MutableMap<String, Any?> {
+    /*protected open fun getResponseBody(response: Response): MutableMap<String, Any?> {
         val body = response.body() ?: return mutableMapOf<String, Any?>()
 
         try {
@@ -67,7 +64,7 @@ open class KeycloakErrorDecoder(protected val objectMapper: ObjectMapper) : Erro
         }
 
         return mutableMapOf()
-    }
+    }*/
 
     protected open fun initStrategies() {
         strategies.add(GeneralErrorHandlerStrategy())
