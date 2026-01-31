@@ -5,7 +5,7 @@
 
     <groupId>ir.bamap.blu.adapter</groupId>
     <artifactId>keycloak-adapter</artifactId>
-    <version>4.0.1.0</version>
+    <version>4.1.0</version>
 
     <name>Keycloak Adapter</name>
     <description>Blu keycloak adapter</description>
@@ -47,42 +47,56 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <exception.version>1.0.4</exception.version>
-        <keycloak-model.version>1.1.2</keycloak-model.version>
+        <keycloak-model.version>1.1.3</keycloak-model.version>
 
         <!--   Test versions   -->
-        <spring-boot.version>4.0.1</spring-boot.version>
-        <testcontainers-keycloak.version>4.0.1</testcontainers-keycloak.version>
+        <spring-boot.version>4.0.2</spring-boot.version>
+        <testcontainers-keycloak.version>4.1.1</testcontainers-keycloak.version>
     </properties>
     <dependencies>
         <dependency>
             <groupId>ir.bamap.blu</groupId>
             <artifactId>exception</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
             <version>${exception.version}</version>
         </dependency>
         <dependency>
             <groupId>ir.bamap.blu.adapter</groupId>
             <artifactId>keycloak-model</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
             <version>${keycloak-model.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webflux</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
 
         <!--   Test Dependencies   -->

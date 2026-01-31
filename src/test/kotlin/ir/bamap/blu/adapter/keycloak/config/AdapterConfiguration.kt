@@ -3,22 +3,19 @@ package ir.bamap.blu.adapter.keycloak.config
 import ir.bamap.blu.adapter.keycloak.adapter.KeycloakUserAdapter
 import ir.bamap.blu.adapter.keycloak.adapter.TokenAdapter
 import ir.bamap.blu.adapter.keycloak.provider.ClientTokenProvider
-import org.springframework.boot.SpringBootConfiguration
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
-import org.springframework.web.reactive.function.client.ClientRequest
-import org.springframework.web.reactive.function.client.ClientResponse
-import org.springframework.web.reactive.function.client.ExchangeFilterFunction
-import org.springframework.web.reactive.function.client.ExchangeFunction
-import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.bodyToMono
+import org.springframework.web.reactive.function.client.*
 import org.springframework.web.reactive.function.client.support.WebClientAdapter
 import org.springframework.web.service.invoker.HttpServiceProxyFactory
 import org.springframework.web.service.invoker.createClient
 import reactor.core.publisher.Mono
 import tools.jackson.databind.ObjectMapper
+import java.util.function.Function
+import java.util.function.Predicate
+import javax.naming.ServiceUnavailableException
 
 
 //@SpringBootConfiguration
