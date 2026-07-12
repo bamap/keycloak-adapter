@@ -1,10 +1,12 @@
-package ir.bamap.blu.adapter.keycloak.config.error.handler
+package ir.bamap.blu.adapter.keycloak.config.strategy
 
+import ir.bamap.blu.adapter.config.error.handler.ErrorDecoderStrategy
+import ir.bamap.blu.adapter.config.model.JsonResponseModel
 import ir.bamap.blu.adapter.keycloak.config.Messages
 import ir.bamap.blu.adapter.keycloak.exception.*
-import org.springframework.web.reactive.function.client.ClientResponse
+import ir.bamap.blu.exception.BluException
 
-open class GeneralErrorHandlerStrategy : ErrorHandlerStrategy {
+open class GeneralErrorHandlerStrategy : ErrorDecoderStrategy {
 
     protected val errorDescriptionExceptionMap = mutableMapOf<String, SecurityAdapterException>()
     protected val errorMessageExceptionMap = mutableMapOf<String, SecurityAdapterException>()
@@ -14,12 +16,12 @@ open class GeneralErrorHandlerStrategy : ErrorHandlerStrategy {
         initErrorMessageExceptionMap()
     }
 
-    override fun getExceptionOrNull(errorBody: Map<String, Any?>, response: ClientResponse): SecurityAdapterException? {
-        val description = errorBody["error_description"] as String?
+    override fun getExceptionOrNull(response: JsonResponseModel): BluException? {
+        val description = response.jsonBody["error_description"] as String?
         val entry = errorDescriptionExceptionMap.get(description)
         if (entry != null) return entry
 
-        val errorMessage = errorBody["errorMessage"] as String?
+        val errorMessage = response.jsonBody["errorMessage"] as String?
         return errorMessageExceptionMap[errorMessage]
     }
 

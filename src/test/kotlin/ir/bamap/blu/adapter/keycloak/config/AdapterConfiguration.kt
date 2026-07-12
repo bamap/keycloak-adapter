@@ -3,56 +3,66 @@ package ir.bamap.blu.adapter.keycloak.config
 import ir.bamap.blu.adapter.keycloak.adapter.KeycloakUserAdapter
 import ir.bamap.blu.adapter.keycloak.adapter.TokenAdapter
 import ir.bamap.blu.adapter.keycloak.provider.ClientTokenProvider
-import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.boot.SpringBootConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
-import org.springframework.web.reactive.function.client.*
+import org.springframework.web.reactive.function.client.ClientRequest
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction
+import org.springframework.web.reactive.function.client.ExchangeFunction
+import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.support.WebClientAdapter
 import org.springframework.web.service.invoker.HttpServiceProxyFactory
 import org.springframework.web.service.invoker.createClient
-import reactor.core.publisher.Mono
 import tools.jackson.databind.ObjectMapper
-import java.util.function.Function
-import java.util.function.Predicate
-import javax.naming.ServiceUnavailableException
 
 
-//@SpringBootConfiguration
-@TestConfiguration(proxyBeanMethods = false)
+@SpringBootConfiguration
+//@TestConfiguration(proxyBeanMethods = false)
 open class AdapterConfiguration(
     private val kycInfo: KycInfo
 ) {
 
     @Bean
-    fun adapterWebClient(builder: WebClient.Builder): WebClient {
+    open fun webClientBuilder(): WebClient.Builder {
+        return WebClient.builder()
+    }
+
+    @Bean
+    open fun keycloakErrorHandler(): KeycloakErrorHandler {
+        return KeycloakErrorHandler(ObjectMapper())
+    }
+
+    @Bean
+    open fun adapterWebClient(builder: WebClient.Builder, errorHandler: KeycloakErrorHandler): WebClient {
         return builder
             .baseUrl(kycInfo.getRealmUrl())
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .filter(errorHandler.handleResponseError())
+            .filter(errorHandler.handleConnectionError())
 //            .defaultHeader("Authorization", "token " + properties.getToken())
-//            .filter(errorHandler())
-//            .filter(connectionErrorHandler())
-//            .filter(rateLimitHandler())
             .build()
     }
 
     @Bean
-    fun tokenAdapter(adapterWebClient: WebClient): TokenAdapter {
+    open fun tokenAdapter(adapterWebClient: WebClient): TokenAdapter {
         return HttpServiceProxyFactory.builderFor(WebClientAdapter.create(adapterWebClient))
             .build()
             .createClient<TokenAdapter>()
     }
 
     @Bean
-    fun userAdapter(builder: WebClient.Builder, clientTokenProvider: ClientTokenProvider): KeycloakUserAdapter {
+    open fun userAdapter(
+        builder: WebClient.Builder,
+        clientTokenProvider: ClientTokenProvider,
+        errorHandler: KeycloakErrorHandler
+    ): KeycloakUserAdapter {
         val adapterWebClient = builder
             .baseUrl(kycInfo.getAdminRealmUrl())
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .filter(oauthFilter(clientTokenProvider))
-//            .defaultHeader("Authorization", "token " + properties.getToken())
-            .filter(errorHandler())
-//            .filter(connectionErrorHandler())
-//            .filter(rateLimitHandler())
+            .filter(errorHandler.handleResponseError())
+            .filter(errorHandler.handleConnectionError())
             .build()
         return HttpServiceProxyFactory.builderFor(WebClientAdapter.create(adapterWebClient))
             .build()
@@ -60,7 +70,7 @@ open class AdapterConfiguration(
     }
 
     @Bean
-    fun clientTokenProvider(tokenAdapter: TokenAdapter): ClientTokenProvider {
+    open fun clientTokenProvider(tokenAdapter: TokenAdapter): ClientTokenProvider {
         return ClientTokenProvider(tokenAdapter, kycInfo.clientId, kycInfo.clientSecret)
     }
 
@@ -72,25 +82,6 @@ open class AdapterConfiguration(
                 .header("Authorization", token)
                 .build()
             next.exchange(filteredRequest)
-        }
-    }
-
-    @Bean
-    open fun keycloakErrorDecoder(): KeycloakErrorDecoder {
-        return KeycloakErrorDecoder(ObjectMapper())
-    }
-
-    private fun errorHandler(): ExchangeFilterFunction {
-        return ExchangeFilterFunction.ofResponseProcessor { response: ClientResponse ->
-            if (response.statusCode().isError) {
-                println("Error Status Code: ${response.statusCode().value()}")
-                return@ofResponseProcessor response.bodyToMono<String>()
-                    .flatMap { errorBody: String? ->
-                        println("Error: $errorBody")
-                        Mono.error(RuntimeException())
-                    }
-            }
-            Mono.just(response)
         }
     }
 }

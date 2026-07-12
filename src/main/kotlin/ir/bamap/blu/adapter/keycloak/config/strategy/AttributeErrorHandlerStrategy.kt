@@ -1,19 +1,20 @@
-package ir.bamap.blu.adapter.keycloak.config.error.handler
+package ir.bamap.blu.adapter.keycloak.config.strategy
 
+import ir.bamap.blu.adapter.config.error.handler.ErrorDecoderStrategy
+import ir.bamap.blu.adapter.config.model.JsonResponseModel
 import ir.bamap.blu.adapter.keycloak.exception.AttributeRequiredException
 import ir.bamap.blu.adapter.keycloak.exception.SecurityAdapterException
 import ir.bamap.blu.exception.BluException
-import org.springframework.web.reactive.function.client.ClientResponse
 
 class AttributeErrorHandlerStrategy(
     private val errorMessageExceptionMap: Map<String, SecurityAdapterException> = HashMap()
-) : ErrorHandlerStrategy {
+) : ErrorDecoderStrategy {
 
-    override fun getExceptionOrNull(errorBody: Map<String, Any?>, response: ClientResponse): BluException? {
-        val errorMessage = errorBody["errorMessage"] as String?
+    override fun getExceptionOrNull(response: JsonResponseModel): BluException? {
+        val errorMessage = response.jsonBody["errorMessage"] as String?
 
         if (errorMessage === "error-user-attribute-required") {
-            val field: Any = errorBody["field"]!!
+            val field: Any = response.jsonBody["field"]!!
             return AttributeRequiredException(field.toString())
         }
 
