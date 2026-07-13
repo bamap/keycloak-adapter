@@ -5,7 +5,7 @@
 
     <groupId>ir.bamap.blu.adapter</groupId>
     <artifactId>keycloak-adapter</artifactId>
-    <version>4.1.2</version>
+    <version>4.2.0</version>
 
     <name>Keycloak Adapter</name>
     <description>Blu keycloak adapter</description>
@@ -47,7 +47,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <exception.version>1.0.6</exception.version>
-        <keycloak-model.version>1.1.3</keycloak-model.version>
+        <keycloak-model.version>1.1.4</keycloak-model.version>
         <bamap-adapter.version>4.3.1</bamap-adapter.version>
 
         <!--   Test versions   -->
