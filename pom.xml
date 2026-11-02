@@ -5,7 +5,7 @@
 
     <groupId>ir.bamap.blu.adapter</groupId>
     <artifactId>keycloak-adapter</artifactId>
-    <version>4.2.0</version>
+    <version>4.2.1</version>
 
     <name>Keycloak Adapter</name>
     <description>Blu keycloak adapter</description>
@@ -47,11 +47,11 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <exception.version>1.0.6</exception.version>
-        <keycloak-model.version>1.1.4</keycloak-model.version>
-        <bamap-adapter.version>4.3.1</bamap-adapter.version>
+        <keycloak-model.version>1.1.5</keycloak-model.version>
+        <bamap-adapter.version>4.3.3</bamap-adapter.version>
 
         <!--   Test versions   -->
-        <spring-boot.version>4.1.0</spring-boot.version>
+        <spring-boot.version>4.1.2</spring-boot.version>
         <testcontainers-keycloak.version>4.3.0</testcontainers-keycloak.version>
     </properties>
     <dependencies>
